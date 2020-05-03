@@ -1,4 +1,4 @@
-QT -= gui
+QT += core gui sql
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -15,9 +15,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        main.cpp
+        main.cpp \
+        sqlhandler.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.04-x86-64bit/lib/release/ -lmysqlcppconn
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.04-x86-64bit/lib/debug/ -lmysqlcppconn
+else:unix: LIBS += -L$$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.04-x86-64bit/lib/ -lmysqlcppconn
+
+INCLUDEPATH += $$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.04-x86-64bit/include
+DEPENDPATH += $$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.04-x86-64bit/include
+
+HEADERS += \
+    sqlhandler.h
