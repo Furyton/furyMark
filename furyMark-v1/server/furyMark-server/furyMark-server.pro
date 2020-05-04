@@ -16,7 +16,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        sqlhandler.cpp
+        sqlhandler.cpp \
+        generaldata.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -31,4 +32,5 @@ INCLUDEPATH += $$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16
 DEPENDPATH += $$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.04-x86-64bit/include
 
 HEADERS += \
-    sqlhandler.h
+    sqlhandler.h \
+    generaldata.h

@@ -17,6 +17,10 @@ MainWindow::MainWindow(QWidget *parent)
 //    ui->setupUi(this);
     readSettings();
 
+    editor->setAcceptDrops(false);
+    preview->setAcceptDrops(false);
+    this->setAcceptDrops(true);
+
     splitter = new QSplitter(this);
     setCentralWidget(splitter);
 
@@ -37,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     splitter->setHandleWidth(10);
     splitter->setStretchFactor(0, 7);
     splitter->setStretchFactor(1, 3);
+
 
 //    preview->hide();
 //    preview->setParent(this);
@@ -156,6 +161,11 @@ void MainWindow::documentModified()
     content.setText(editor->document()->toPlainText());
 }
 
+/*
+ * create all the actions and buttons here
+ * it maybe a little messy
+*/
+
 
 void MainWindow::buildWidgetActions()
 {
@@ -238,11 +248,31 @@ void MainWindow::buildWidgetActions()
     connect(pasteAct, &QAction::triggered, editor, &QPlainTextEdit::paste);
     editMenu->addAction(pasteAct);
     editToolBar->addAction(pasteAct);
+
+
+    //bold
+    QAction *boldAct = new QAction(tr("Bold"), this);
+    QKeySequence *boldKeyShortCut = new QKeySequence(tr("Ctrl+B"));
+    boldAct->setShortcut(*boldKeyShortCut);
+    boldAct->setStatusTip(tr("Emphasize the selected text."));
+    editMenu->addAction(boldAct);
+    editToolBar->addAction(boldAct);
+
+    //italic
+    QAction *italicAct = new QAction(tr("Italic"), this);
+    QKeySequence *italicKeyShortCut = new QKeySequence(tr("Ctrl+I"));
+    italicAct->setShortcut(*italicKeyShortCut);
+    italicAct->setStatusTip(tr("Emphasize the selected text."));
+    editMenu->addAction(italicAct);
+    editToolBar->addAction(italicAct);
+
+//    editToolBar->setVisible();
+
 #endif
 
     //show preview
     QAction *showPreview = new QAction(tr("Pre&view"), this);
-    QKeySequence *s = new QKeySequence(tr("Ctrl+B"));
+    QKeySequence *s = new QKeySequence(tr("Ctrl+P"));
     showPreview->setShortcut(*s);
     showPreview->setStatusTip(tr("Show the preview page"));
     connect(showPreview, &QAction::triggered, this, &MainWindow::switchPreview);
@@ -270,6 +300,11 @@ void MainWindow::buildWidgetActions()
 
 }
 
+/*
+ * Action responsed to preview button
+ * close or show the preview page
+*/
+
 void MainWindow::switchPreview()
 {
     static bool visible = true;
@@ -281,6 +316,11 @@ void MainWindow::switchPreview()
         visible = true;
     }
 }
+
+/*
+ * save mainWindow's size settings while closing
+ * and read Settings at the beginning
+*/
 
 void MainWindow::readSettings()
 {
@@ -299,6 +339,7 @@ void MainWindow::writeSettings()
 {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     settings.setValue("geometry", saveGeometry());
+    settings.setValue("splitter", splitter->saveState());
 }
 
 
@@ -459,5 +500,30 @@ void MainWindow::commitData(QSessionManager &manager)
         if(editor->document()->isModified()) {
             save();
         }
+    }
+}
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+    event->acceptProposedAction();
+}
+void MainWindow::dropEvent(QDropEvent *event) {
+    QList<QUrl> urls = event->mimeData()->urls();
+    if(urls.isEmpty())
+        return;
+    static int imgCount = 0;
+
+    foreach(QUrl url, urls) {
+        QString file_name = url.toLocalFile();
+//        editor->appendPlainText(QFileInfo(file_name).suffix());
+        QString format = QFileInfo(file_name).suffix().toLower();
+        if(format == "jpeg" || format == "png" || format == "jpg") {
+
+            imgCount++;
+            editor->appendPlainText("![" + QFileInfo(file_name).fileName() + ":index " + QString("%1").arg(imgCount) + "](file:" + file_name + ")");
+        } else if(format == "md") {
+            if(saveDialog())
+                loadLoacalFile(file_name);
+        }
+
+//        QFileInfo(file_name).suffix()
     }
 }

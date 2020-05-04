@@ -25,6 +25,8 @@ public:
 //    ~MainWindow();
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent *) override;
+    void dropEvent(QDropEvent *) override;
 
 private slots:
     void createFile();
