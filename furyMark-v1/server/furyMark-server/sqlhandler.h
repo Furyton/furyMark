@@ -37,7 +37,7 @@ class sqlHandler
                     download_pdf: 32bit->timeStamp
                     delete: 32bit->timeStamp
                 服务器：
-                    3bit: 5->list, 6->text, 7->pdf, 8->upload/delete success, 10->upload/delete failed
+                    3bit: 5->list, 6->text, 7->pdf, 8->upload/delete success, 9->upload/delete failed
 
                     list: 32bit->length, length * 32 timeStamp, name
 

@@ -3,23 +3,54 @@
 #include <QDebug>
 
 #include <generaldata.h>
+#include <sqllitehandler.h>
+
+
 #include <sqlhandler.h>
 
 sql::Driver* sqlHandler::driver = nullptr;
 sql::Connection* sqlHandler::con = nullptr;
 sql::Statement* sqlHandler::stmt = nullptr;
 sql::ResultSet* sqlHandler::res = nullptr;
+sql::PreparedStatement* sqlHandler::pstmt = nullptr;
 bool sqlHandler::hasInited = false;
-
+QSqlDatabase sqlLiteHandler::database;
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    int count, timeStamp;
+    sqlLiteHandler::init();
 
-    sqlHandler::init();
-    sqlHandler::getTableInfo(count, timeStamp);
+//    sqlLiteHandler::changeFile(2,"file3","# title");
+
+//    generalData tmp;
+//    tmp.type = 2;
+//    tmp.timeStamp = 2;
+
+//    generalData ret = sqlLiteHandler::download_pdf(tmp);
+
+//    QFile file(QCoreApplication::applicationDirPath() + "/temp.pdf");
+//    file.open(QIODevice::WriteOnly);
+//    file.write(ret.attachPDF);
+//    file.close();
+
+//    qDebug() << QString("return:\rtimeStamp:%1\rfilename:%2\rcontent:%3").arg(ret.timeStamp).arg(ret.fileName).arg(ret.content);
+
+//    int fileCount, stamp;
+//    sqlLiteHandler::getTableInfo(fileCount, stamp);
+//    sqlLiteHandler::setTableInfo(1,1);
+//    sqlLiteHandler::getTableInfo(fileCount, stamp);
+
+//    sqlLiteHandler::changeFile(1, "file1", "content1");
+//    sqlLiteHandler::addFile(2,"file2","content2");
+//    sqlLiteHandler::changeFile(2,"file3","content3");
+
+//    qDebug() << sqlLiteHandler::fileExist(2);
+//    int count, timeStamp;
+
+//    sqlHandler::init();
+//    sqlHandler::getTableInfo(count, timeStamp);
 
 //    w.show();
 

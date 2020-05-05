@@ -1,4 +1,4 @@
-QT += core gui sql
+QT += core gui sql widgets
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -17,7 +17,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         sqlhandler.cpp \
-        generaldata.cpp
+        generaldata.cpp \
+        sqllitehandler.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -33,4 +34,5 @@ DEPENDPATH += $$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.
 
 HEADERS += \
     sqlhandler.h \
-    generaldata.h
+    generaldata.h \
+    sqllitehandler.h
