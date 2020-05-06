@@ -61,6 +61,8 @@ void sqlLiteHandler::createTable()
     } else {
         qDebug() << "table info created.";
     }
+
+    setTableInfo(0, 0);
 }
 
 /*
@@ -198,7 +200,10 @@ bool sqlLiteHandler::fileExist(int stamp)
         return false;
     } else {
         while(sql_query.next()) {
-            if(stamp == sql_query.value(0).toInt()) return true;
+            if(stamp == sql_query.value(0).toInt()){
+                qDebug() << QString("file %1 exist.").arg(stamp);
+                return true;
+            }
         }
         return false;
     }
@@ -235,6 +240,7 @@ generalData sqlLiteHandler::upload(const generalData &info)
     if(fileExist(info.timeStamp)) {
         if(changeFile(info.timeStamp, info.fileName, info.content)) {
             ret.type = 8;
+//            qDebug() << QString("have changed file %1 's content").arg(info.timeStamp);
         } else {
             ret.type = 9;
         }
@@ -248,6 +254,7 @@ generalData sqlLiteHandler::upload(const generalData &info)
             setTableInfo(curCount, stamp);
 
             if(addFile(stamp, info.fileName, info.content)) {
+//                qDebug() << QString("added a new file named %1").arg(info.fileName);
                 ret.type = 8;
             } else {
                 ret.type = 9;
@@ -265,6 +272,7 @@ generalData sqlLiteHandler::download_pdf(const generalData &info)
 
     ret = download_text(info);
     if(ret.type != 9) {
+        qDebug() << "getting pdf file...";
         ret.type = 7;
 
         QFile file(QCoreApplication::applicationDirPath() + "/temporary.md");
@@ -297,6 +305,8 @@ generalData sqlLiteHandler::download_text(const generalData &info)
     if(!fileExist(info.timeStamp)) {
         ret.type = 9;
     } else {
+        qDebug() << "getting file content";
+
         QString select_sql = "select * from file where id=:id";
         QSqlQuery sql_query(database);
         sql_query.prepare(select_sql);
@@ -321,17 +331,55 @@ generalData sqlLiteHandler::download_text(const generalData &info)
 
     return ret;
 }
-generalData sqlLiteHandler::getList(const generalData &info)
+generalData sqlLiteHandler::getList()
 {
     generalData ret;
 
+    QString select = "SELECT * FROM file";
 
+    QSqlQuery sql_query(database);
+    sql_query.prepare(select);
+    if(!sql_query.exec()) {
+        ret.type = 9;
+        qDebug() << sql_query.lastError();
+    } else {
+        qDebug() << "getting file list";
+
+        ret.type = 5;
+        ret.listLength = 0;
+        while(sql_query.next()) {
+            ret.fileNameList.push(sql_query.value(1).toString());
+            ret.fileStampList.push(sql_query.value(0).toInt());
+            ret.listLength++;
+        }
+    }
 
     return ret;
 }
 generalData sqlLiteHandler::deleteFile(const generalData &info)
 {
     generalData ret;
+
+    if(!fileExist(info.timeStamp)) {
+        ret.type = 9;
+    } else {
+        QString del = "DELETE FROM file WHERE id=:id";
+        QSqlQuery sql_query(database);
+        sql_query.prepare(del);
+        sql_query.bindValue(":id", info.timeStamp);
+
+        if(!sql_query.exec()) {
+            ret.type = 9;
+            qDebug() << sql_query.lastError();
+        } else {
+            qDebug() << "deleting file" << info.timeStamp;
+
+            ret.type = 8;
+            int count, stamp;
+            if(getTableInfo(count, stamp))
+                setTableInfo(count - 1, stamp);
+        }
+    }
 
     return ret;
 }

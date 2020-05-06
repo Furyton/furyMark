@@ -20,7 +20,7 @@ public:
     static generalData upload(const generalData &info);
     static generalData download_pdf(const generalData &info);
     static generalData download_text(const generalData &info);
-    static generalData getList(const generalData &info);
+    static generalData getList();
     static generalData deleteFile(const generalData &info);
 
     static bool init();

@@ -5,7 +5,6 @@
 #include <generaldata.h>
 #include <sqllitehandler.h>
 
-
 #include <sqlhandler.h>
 
 sql::Driver* sqlHandler::driver = nullptr;
@@ -22,6 +21,31 @@ int main(int argc, char *argv[])
 
     sqlLiteHandler::init();
 
+    generalData tmp;
+    tmp.timeStamp = 2;
+    sqlLiteHandler::deleteFile(tmp);
+
+
+
+
+//    generalData tmp = sqlLiteHandler::getList();
+
+//    qDebug() << tmp.listLength;
+//    queue<int>tmpStampQueue = tmp.fileStampList;
+//    queue<QString>tmpNameQueue = tmp.fileNameList;
+
+//    for(int i = 0; i < tmp.listLength; i++) {
+//        qDebug() << tmpStampQueue.front() << " : " << tmpNameQueue.front();
+//        tmpStampQueue.pop(); tmpNameQueue.pop();
+//    }
+
+//    queue<int>tmpStampQueue1 = tmp.fileStampList;
+//    queue<QString>tmpNameQueue1 = tmp.fileNameList;
+
+//    for(int i = 0; i < tmp.listLength; i++) {
+//        qDebug() << tmpStampQueue1.front() << " : " << tmpNameQueue1.front();
+//        tmpStampQueue1.pop(); tmpNameQueue1.pop();
+//    }
 //    sqlLiteHandler::changeFile(2,"file3","# title");
 
 //    generalData tmp;
