@@ -4,6 +4,10 @@
 #include <QMainWindow>
 #include <document.h>
 #include <QSplitter>
+//#include <QListWidget>
+
+#include <mylistwidget.h>
+#include <generaldata.h>
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -22,7 +26,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
-//    ~MainWindow();
+    ~MainWindow();
 protected:
     void closeEvent(QCloseEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *) override;
@@ -37,6 +41,7 @@ private slots:
     void switchPreview();
 #ifndef QT_NO_SESSIONMANAGER
     void commitData(QSessionManager &);
+    void popUpList();
 #endif
 
 private:
@@ -49,10 +54,14 @@ private:
     void loadLoacalFile(const QString &fileName);
     bool saveFile(const QString &fileName);
     void setCurFileTitle(const QString &fileName);
+//    void setCurFileTitle(const QString &fileName, int stamp);
     QString getFileName(const QString &fullFileName);
+    void loadCloudFile(int stamp, const QString &fileName, const QString &content);
 
     QPlainTextEdit *editor;
 //    QTextBrowser *preview;
+//    QListWidget *list;
+    MyListWidget *list;
     QWebEngineView *preview;
     QSplitter *splitter;
     QString curFile; //current file name

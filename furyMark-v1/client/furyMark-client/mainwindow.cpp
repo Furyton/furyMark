@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
     , preview(new QWebEngineView)
 {
 //    ui->setupUi(this);
+    list = nullptr;
+
     readSettings();
 
     editor->setAcceptDrops(false);
@@ -42,7 +44,6 @@ MainWindow::MainWindow(QWidget *parent)
     splitter->setStretchFactor(0, 7);
     splitter->setStretchFactor(1, 3);
 
-
 //    preview->hide();
 //    preview->setParent(this);
 
@@ -55,10 +56,11 @@ MainWindow::MainWindow(QWidget *parent)
     setUnifiedTitleAndToolBarOnMac(true);
 }
 
-//MainWindow::~MainWindow()
-//{
-//    delete ui;
-//}
+MainWindow::~MainWindow()
+{
+    if(list != nullptr)
+        delete list;
+}
 
 /*
  * closeEvent
@@ -132,19 +134,20 @@ bool MainWindow::save()
 
 bool MainWindow::saveAs()
 {
-//    QFileDialog dialog(this);
-//    dialog.setWindowModality(Qt::WindowModal);
-//    dialog.setAcceptMode(QFileDialog::AcceptSave);
-//    if(dialog.exec() != QDialog::Accepted) {
-//        return false;
-//    }
-//    return saveFile(dialog.selectedFiles().first());
-
-    QString path = QFileDialog::getSaveFileName(this,
-        tr("Save MarkDown File"), "", tr("MarkDown(*.md, *.markdown)"));
-    if (path.isEmpty())
+    QFileDialog dialog(this, tr("Save Markdown File"));
+    dialog.setNameFilter("*.md");
+    dialog.setWindowModality(Qt::WindowModal);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    if(dialog.exec() != QDialog::Accepted) {
         return false;
-    return saveFile(path);
+    }
+    return saveFile(dialog.selectedFiles().first());
+
+//    QString path = QFileDialog::getSaveFileName(this,
+//        tr("Save MarkDown File"), "", tr("MarkDown(*.md)"));
+//    if (path.isEmpty())
+//        return false;
+//    return saveFile(path);
 }
 
 /*
@@ -211,8 +214,6 @@ void MainWindow::buildWidgetActions()
     exitAct->setShortcuts(QKeySequence::Quit);
     exitAct->setStatusTip(tr("Exit the application"));
 
-
-
     //edit
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     QToolBar *editToolBar = addToolBar(tr("Edit"));
@@ -228,7 +229,6 @@ void MainWindow::buildWidgetActions()
     connect(cutAct, &QAction::triggered, editor, &QPlainTextEdit::cut);
     editMenu->addAction(cutAct);
     editToolBar->addAction(cutAct);
-
 
     //copy
     QAction *copyAct = new QAction(tr("&Copy"), this);
@@ -278,6 +278,14 @@ void MainWindow::buildWidgetActions()
     connect(showPreview, &QAction::triggered, this, &MainWindow::switchPreview);
     editMenu->addAction(showPreview);
     editToolBar->addAction(showPreview);
+
+    QAction *cloudFileopt = new QAction(tr("Clo&udFile"), this);
+    QKeySequence *cloudShortCut = new QKeySequence(tr("Ctrl+Shift+U"));
+    cloudFileopt->setShortcut(*cloudShortCut);
+    cloudFileopt->setStatusTip(tr("Operate the cloud files"));
+    connect(cloudFileopt, &QAction::triggered, this, &MainWindow::popUpList);
+    fileToolBar->addAction(cloudFileopt);
+
 
 #ifndef QT_NO_CLIPBOARD
     cutAct->setEnabled(false);
@@ -387,6 +395,7 @@ bool MainWindow::saveDialog()
 
 void MainWindow::loadLoacalFile(const QString &fileName)
 {
+    timeStamp = -1;
     QFile file(fileName);
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
         QMessageBox::warning(this, tr("Application"),
@@ -409,6 +418,18 @@ void MainWindow::loadLoacalFile(const QString &fileName)
 
     setCurFileTitle(fileName);
     statusBar()->showMessage(tr("File loaded"), 2000);
+}
+
+void MainWindow::loadCloudFile(int stamp, const QString &fileName, const QString &content)
+{
+    if(saveDialog()) {
+        timeStamp = stamp;
+        editor->clear();
+        editor->setPlainText(content);
+
+        setCurFileTitle(QString());
+        setWindowTitle(fileName);
+    }
 }
 
 /*
@@ -446,6 +467,7 @@ bool MainWindow::saveFile(const QString &fileName)
     }
 
     setCurFileTitle(fileName);
+
     statusBar() -> showMessage(tr("File saved"), 2000);
     return true;
 }
@@ -457,6 +479,7 @@ bool MainWindow::saveFile(const QString &fileName)
 */
 void MainWindow::setCurFileTitle(const QString &fileName) {
     curFile = fileName;
+
     editor->document()->setModified(false);
     setWindowModified(false);
 
@@ -526,4 +549,11 @@ void MainWindow::dropEvent(QDropEvent *event) {
 
 //        QFileInfo(file_name).suffix()
     }
+}
+void MainWindow::popUpList()
+{
+    list = new MyListWidget();
+    list->setWindowModality(Qt::ApplicationModal);
+
+    list->show();
 }

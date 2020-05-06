@@ -19,15 +19,20 @@ SOURCES += \
     document.cpp \
     main.cpp \
     mainwindow.cpp \
-    previewpage.cpp
+    mylistwidget.cpp \
+    previewpage.cpp \
+    generaldata.cpp
 
 HEADERS += \
     document.h \
     mainwindow.h \
-    previewpage.h
+    mylistwidget.h \
+    previewpage.h \
+    generaldata.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    mylistwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
