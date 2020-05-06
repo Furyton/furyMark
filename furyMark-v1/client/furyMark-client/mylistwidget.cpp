@@ -33,6 +33,7 @@ void MyListWidget::on_deleteButton_clicked()
 void MyListWidget::on_openButton_clicked()
 {
     qDebug() << ui->listWidget->currentRow();
+    emit openSignal(1, "test.md", "# test ");
 }
 
 void MyListWidget::on_pdfButton_clicked()

@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , preview(new QWebEngineView)
 {
 //    ui->setupUi(this);
-    list = nullptr;
+    list = new MyListWidget();
 
     readSettings();
 
@@ -58,8 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    if(list != nullptr)
-        delete list;
+    delete list;
 }
 
 /*
@@ -88,6 +87,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::createFile()
 {
     if(saveDialog()) {
+        timeStamp = -1;
         editor->clear();
         setCurFileTitle(QString());
     }
@@ -255,6 +255,7 @@ void MainWindow::buildWidgetActions()
     QKeySequence *boldKeyShortCut = new QKeySequence(tr("Ctrl+B"));
     boldAct->setShortcut(*boldKeyShortCut);
     boldAct->setStatusTip(tr("Emphasize the selected text."));
+    connect(boldAct, &QAction::triggered, this, &MainWindow::onBold);
     editMenu->addAction(boldAct);
     editToolBar->addAction(boldAct);
 
@@ -262,9 +263,18 @@ void MainWindow::buildWidgetActions()
     QAction *italicAct = new QAction(tr("Italic"), this);
     QKeySequence *italicKeyShortCut = new QKeySequence(tr("Ctrl+I"));
     italicAct->setShortcut(*italicKeyShortCut);
-    italicAct->setStatusTip(tr("Emphasize the selected text."));
+    italicAct->setStatusTip(tr("Make the selected text italic style."));
+    connect(italicAct, &QAction::triggered, this, &MainWindow::onItalic);
     editMenu->addAction(italicAct);
     editToolBar->addAction(italicAct);
+
+    //Picture
+    QAction *picAct = new QAction(tr("Picture"), this);
+    QKeySequence *picShortCut = new QKeySequence(tr("Ctrl+Shift+P"));
+    picAct->setShortcut(*picShortCut);
+    picAct->setStatusTip(tr("Add a pic to your md file, you can choose to post the img online or not"));
+
+
 
 //    editToolBar->setVisible();
 
@@ -306,6 +316,27 @@ void MainWindow::buildWidgetActions()
             this, &MainWindow::commitData);
 #endif
 
+    connect(list, &MyListWidget::openSignal, this, &MainWindow::loadCloudFile);
+}
+
+void MainWindow::insertPic()
+{
+    const QMessageBox::StandardButton ret
+        = QMessageBox::warning(this, tr("FuryMark"),
+                               tr("Your are inserting a picture.\n"
+                                  "Do you want to add it via picture post?\n"
+                                  "<small>It will take some time.</small>"),
+                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+    switch (ret) {
+        case QMessageBox::Yes:
+            return ;
+        case QMessageBox::No:
+            return;
+        default:
+            break;
+    }
+
 }
 
 /*
@@ -325,6 +356,46 @@ void MainWindow::switchPreview()
     }
 }
 
+void MainWindow::onBold()
+{
+    QTextCursor currentTextCursor = editor->textCursor();
+
+    if(!currentTextCursor.hasSelection()) {
+        currentTextCursor.insertText("**" + tr("Type here") + "**");
+        currentTextCursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
+        currentTextCursor.movePosition(QTextCursor::WordLeft, QTextCursor::KeepAnchor, 2);
+        editor->setTextCursor(currentTextCursor);
+    } else {
+
+        QString text = currentTextCursor.selectedText();
+        if(text.length() >= 4 && text.startsWith("**") && text.endsWith("**")) {
+            text.remove(0, 2); text.remove(text.length() - 2, 2);
+            currentTextCursor.insertText(text);
+        } else {
+            currentTextCursor.insertText("**" + currentTextCursor.selectedText() + "**");
+        }
+    }
+}
+
+void MainWindow::onItalic()
+{
+    QTextCursor currentTextCursor = editor->textCursor();
+
+    if(!currentTextCursor.hasSelection()) {
+        currentTextCursor.insertText(" _" + tr("Type here") + "_ ");
+        currentTextCursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
+        currentTextCursor.movePosition(QTextCursor::WordLeft, QTextCursor::KeepAnchor, 2);
+        editor->setTextCursor(currentTextCursor);
+    } else {
+        QString text = currentTextCursor.selectedText();
+        if(text.length() >= 4 && text.startsWith(" _") && text.endsWith("_ ")) {
+            text.remove(0, 2); text.remove(text.length() - 2, 2);
+            currentTextCursor.insertText(text);
+        } else {
+            currentTextCursor.insertText(" _" + currentTextCursor.selectedText() + "_ ");
+        }
+    }
+}
 /*
  * save mainWindow's size settings while closing
  * and read Settings at the beginning
@@ -425,10 +496,11 @@ void MainWindow::loadCloudFile(int stamp, const QString &fileName, const QString
     if(saveDialog()) {
         timeStamp = stamp;
         editor->clear();
-        editor->setPlainText(content);
 
         setCurFileTitle(QString());
-        setWindowTitle(fileName);
+        setWindowFilePath(fileName);
+        editor->appendPlainText(content);
+        qDebug() << editor -> document() -> isModified();
     }
 }
 
@@ -552,8 +624,12 @@ void MainWindow::dropEvent(QDropEvent *event) {
 }
 void MainWindow::popUpList()
 {
-    list = new MyListWidget();
     list->setWindowModality(Qt::ApplicationModal);
+    const QRect availableGeometry = screen()->availableGeometry();
+//    list->setGeometry()
+//    resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
+    list->move((availableGeometry.width() - list->width()) / 2,
+         (availableGeometry.height() - list->height()) / 2);
 
     list->show();
 }

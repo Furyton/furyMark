@@ -2,12 +2,14 @@
 #define MYLISTWIDGET_H
 
 #include <QWidget>
+#include <QObject>
 
 namespace Ui {
 class MyListWidget;
 }
 
 class MyListWidget : public QWidget
+
 {
     Q_OBJECT
 
@@ -22,10 +24,14 @@ private slots:
 
     void on_pdfButton_clicked();
 
+    void on_actionOpen_triggered();
+
 private:
     Ui::MyListWidget *ui;
 
     void getList();
+signals:
+    void openSignal(int, const QString&, const QString&);
 };
 
 #endif // MYLISTWIDGET_H

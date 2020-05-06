@@ -1,4 +1,4 @@
-QT       += core gui webenginewidgets
+QT       += core gui webenginewidgets network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -20,6 +20,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     mylistwidget.cpp \
+    picturehoster.cpp \
     previewpage.cpp \
     generaldata.cpp
 
@@ -27,6 +28,7 @@ HEADERS += \
     document.h \
     mainwindow.h \
     mylistwidget.h \
+    picturehoster.h \
     previewpage.h \
     generaldata.h
 

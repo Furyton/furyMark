@@ -42,6 +42,9 @@ private slots:
 #ifndef QT_NO_SESSIONMANAGER
     void commitData(QSessionManager &);
     void popUpList();
+    void onBold();
+    void onItalic();
+    void insertPic();
 #endif
 
 private:
