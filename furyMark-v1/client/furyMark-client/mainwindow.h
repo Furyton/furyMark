@@ -8,6 +8,7 @@
 
 #include <mylistwidget.h>
 #include <generaldata.h>
+#include <picturehoster.h>
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -60,11 +61,14 @@ private:
 //    void setCurFileTitle(const QString &fileName, int stamp);
     QString getFileName(const QString &fullFileName);
     void loadCloudFile(int stamp, const QString &fileName, const QString &content);
+    void loadPicture();
 
     QPlainTextEdit *editor;
 //    QTextBrowser *preview;
 //    QListWidget *list;
     MyListWidget *list;
+    PictureHoster *hoster;
+
     QWebEngineView *preview;
     QSplitter *splitter;
     QString curFile; //current file name

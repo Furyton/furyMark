@@ -24,8 +24,6 @@ private slots:
 
     void on_pdfButton_clicked();
 
-    void on_actionOpen_triggered();
-
 private:
     Ui::MyListWidget *ui;
 

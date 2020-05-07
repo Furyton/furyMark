@@ -7,6 +7,7 @@
 #include <QWebChannel>
 #include <document.h>
 #include <QKeySequence>
+//#include <QtWebView/QtWebView>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -16,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
 //    ui->setupUi(this);
     list = new MyListWidget();
+    hoster = new PictureHoster();
 
     readSettings();
 
@@ -59,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete list;
+    delete hoster;
 }
 
 /*
@@ -273,7 +276,9 @@ void MainWindow::buildWidgetActions()
     QKeySequence *picShortCut = new QKeySequence(tr("Ctrl+Shift+P"));
     picAct->setShortcut(*picShortCut);
     picAct->setStatusTip(tr("Add a pic to your md file, you can choose to post the img online or not"));
-
+    connect(picAct, &QAction::triggered, this, &MainWindow::insertPic);
+    editMenu->addAction(picAct);
+    editToolBar->addAction(picAct);
 
 
 //    editToolBar->setVisible();
@@ -317,26 +322,49 @@ void MainWindow::buildWidgetActions()
 #endif
 
     connect(list, &MyListWidget::openSignal, this, &MainWindow::loadCloudFile);
+    connect(hoster, &PictureHoster::urlSignal, [=](const QString & url){
+       editor->appendPlainText(url);
+    });
+
+    connect(editor->verticalScrollBar(), &QScrollBar::valueChanged, [=](int val){
+        qDebug() <<val;
+//        preview->page()->scrollPosition().setY(
+//                    (preview->page()->contentsSize().height() - preview->page()->view()->size().height()));
+        preview->scroll(0, preview->page()->contentsSize().height() - preview->page()->view()->size().height());
+//        qDebug() << preview->page()->scrollPosition().y() << ", "<<preview->page()->contentsSize().height() - preview->page()->view()->size().height();
+//        preview->page()->view()->size().height();
+//        qDebug() << editor->verticalScrollBar()->size() << ", " << val;
+    });
+
 }
 
 void MainWindow::insertPic()
 {
     const QMessageBox::StandardButton ret
-        = QMessageBox::warning(this, tr("FuryMark"),
+        = QMessageBox::information(this, tr("FuryMark"),
                                tr("Your are inserting a picture.\n"
-                                  "Do you want to add it via picture post?\n"
-                                  "<small>It will take some time.</small>"),
+                                  "Do you want to add it via picture post which we recommend?\n"
+                                  "It will take some time.\n"
+                                  "notice: picture larger than 5MB is not allowed."),
                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
     switch (ret) {
         case QMessageBox::Yes:
-            return ;
+            QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+            return hoster->sendPost();
         case QMessageBox::No:
+            loadPicture();
             return;
         default:
             break;
     }
 
+}
+void MainWindow::loadPicture()
+{
+    QString strFilePath = QFileDialog::getOpenFileName(nullptr, QString::fromLocal8Bit("Select a picture"), "./",
+                                                       tr("Image files(*.bmp *.jpg *.pbm *.pgm *.png *.ppm *.xbm *.xpm *.jpeg);;All files (*.*)"));
+    editor->appendPlainText("![" + getFileName(strFilePath) + "](" + strFilePath + ")");
 }
 
 /*
@@ -366,7 +394,6 @@ void MainWindow::onBold()
         currentTextCursor.movePosition(QTextCursor::WordLeft, QTextCursor::KeepAnchor, 2);
         editor->setTextCursor(currentTextCursor);
     } else {
-
         QString text = currentTextCursor.selectedText();
         if(text.length() >= 4 && text.startsWith("**") && text.endsWith("**")) {
             text.remove(0, 2); text.remove(text.length() - 2, 2);
@@ -382,17 +409,17 @@ void MainWindow::onItalic()
     QTextCursor currentTextCursor = editor->textCursor();
 
     if(!currentTextCursor.hasSelection()) {
-        currentTextCursor.insertText(" _" + tr("Type here") + "_ ");
+        currentTextCursor.insertText(" *" + tr("Type here") + "* ");
         currentTextCursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
         currentTextCursor.movePosition(QTextCursor::WordLeft, QTextCursor::KeepAnchor, 2);
         editor->setTextCursor(currentTextCursor);
     } else {
         QString text = currentTextCursor.selectedText();
-        if(text.length() >= 4 && text.startsWith(" _") && text.endsWith("_ ")) {
+        if(text.length() >= 4 && text.startsWith(" *") && text.endsWith("* ")) {
             text.remove(0, 2); text.remove(text.length() - 2, 2);
             currentTextCursor.insertText(text);
         } else {
-            currentTextCursor.insertText(" _" + currentTextCursor.selectedText() + "_ ");
+            currentTextCursor.insertText(" *" + currentTextCursor.selectedText() + "* ");
         }
     }
 }

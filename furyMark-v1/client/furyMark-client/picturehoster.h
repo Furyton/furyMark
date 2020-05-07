@@ -14,7 +14,9 @@ class PictureHoster:public QObject
 {
     Q_OBJECT
 public:
-    PictureHoster(){};
+    PictureHoster();
+private:
+    QNetworkAccessManager *networkAccessManager;
 
 public slots:
     void sendPost();
