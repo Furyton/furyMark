@@ -240,6 +240,7 @@ generalData sqlLiteHandler::upload(const generalData &info)
     if(fileExist(info.timeStamp)) {
         if(changeFile(info.timeStamp, info.fileName, info.content)) {
             ret.type = 8;
+            ret.timeStamp = info.timeStamp;
 //            qDebug() << QString("have changed file %1 's content").arg(info.timeStamp);
         } else {
             ret.type = 9;
@@ -256,6 +257,7 @@ generalData sqlLiteHandler::upload(const generalData &info)
             if(addFile(stamp, info.fileName, info.content)) {
 //                qDebug() << QString("added a new file named %1").arg(info.fileName);
                 ret.type = 8;
+                ret.type = stamp;
             } else {
                 ret.type = 9;
             }

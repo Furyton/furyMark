@@ -1,4 +1,4 @@
-QT += core gui sql widgets
+QT += core gui sql widgets network
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
+        mysocket.cpp \
         sqlhandler.cpp \
         generaldata.cpp \
         sqllitehandler.cpp
@@ -33,6 +34,7 @@ INCLUDEPATH += $$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16
 DEPENDPATH += $$PWD/../../../../tools/mysql-connector-c++-1.1.12-linux-ubuntu16.04-x86-64bit/include
 
 HEADERS += \
+    mysocket.h \
     sqlhandler.h \
     generaldata.h \
     sqllitehandler.h

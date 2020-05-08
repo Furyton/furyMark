@@ -39,6 +39,8 @@ QDataStream &operator <<(QDataStream & output,generalData  const &obj)
         output << obj.timeStamp;
         output << obj.fileName;
         output << obj.attachPDF;
+    } else if(obj.type == 8) {
+        output << obj.timeStamp;
     }
 
     return output;
@@ -80,6 +82,8 @@ QDataStream &operator >>(QDataStream & input, generalData &obj)
         input >> obj.timeStamp;
         input >> obj.fileName;
         input >> obj.attachPDF;
+    } else if(obj.type == 8) {
+        input >> obj.timeStamp;
     }
 
     return input;

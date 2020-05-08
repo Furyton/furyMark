@@ -4,7 +4,9 @@
 
 #include <generaldata.h>
 #include <sqllitehandler.h>
+#include <QObject>
 
+#include <mysocket.h>
 #include <sqlhandler.h>
 
 sql::Driver* sqlHandler::driver = nullptr;
@@ -19,12 +21,14 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    sqlLiteHandler::init();
+    MySocket myServer;
+    myServer.init();
 
-    generalData tmp;
-    tmp.timeStamp = 2;
-    sqlLiteHandler::deleteFile(tmp);
+//    sqlLiteHandler::init();
 
+//    generalData tmp;
+//    tmp.timeStamp = 2;
+//    sqlLiteHandler::deleteFile(tmp);
 
 
 
