@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <document.h>
 #include <QSplitter>
+#include <QTcpSocket>
 //#include <QListWidget>
 
 #include <mylistwidget.h>
@@ -42,11 +43,13 @@ private slots:
     void switchPreview();
 #ifndef QT_NO_SESSIONMANAGER
     void commitData(QSessionManager &);
+#endif
     void popUpList();
     void onBold();
     void onItalic();
     void insertPic();
-#endif
+    void upload();
+    void responseDealer();
 
 private:
 //    Ui::MainWindow *ui;
@@ -68,6 +71,7 @@ private:
 //    QListWidget *list;
     MyListWidget *list;
     PictureHoster *hoster;
+    QTcpSocket *socket;
 
     QWebEngineView *preview;
     QSplitter *splitter;

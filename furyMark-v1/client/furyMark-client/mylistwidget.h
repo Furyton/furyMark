@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QObject>
+#include <QTcpSocket>
 
 namespace Ui {
 class MyListWidget;
@@ -16,6 +17,10 @@ class MyListWidget : public QWidget
 public:
     explicit MyListWidget(QWidget *parent = nullptr);
     ~MyListWidget();
+public:
+    void init();
+protected:
+    void closeEvent(QCloseEvent *event) override;
 private slots:
 
     void on_deleteButton_clicked();
@@ -24,10 +29,14 @@ private slots:
 
     void on_pdfButton_clicked();
 
+    void getListRequest();
+
+    void respondDealer();
+
 private:
     Ui::MyListWidget *ui;
+    QTcpSocket *socket;
 
-    void getList();
 signals:
     void openSignal(int, const QString&, const QString&);
 };

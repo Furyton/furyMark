@@ -7,7 +7,7 @@
 #include <QWebChannel>
 #include <document.h>
 #include <QKeySequence>
-//#include <QtWebView/QtWebView>
+#include <QTcpSocket>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -185,7 +185,6 @@ void MainWindow::buildWidgetActions()
     fileMenu->addAction(newAct);
     fileToolBar->addAction(newAct);
 
-
     //open file operator
     QAction *openAct = new QAction(tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
@@ -193,7 +192,6 @@ void MainWindow::buildWidgetActions()
     connect(openAct, &QAction::triggered, this, &MainWindow::open);
     fileMenu->addAction(openAct);
     fileToolBar->addAction(openAct);
-
 
     //save file operator
     QAction *saveAct = new QAction(tr("&Save"), this);
@@ -280,7 +278,6 @@ void MainWindow::buildWidgetActions()
     editMenu->addAction(picAct);
     editToolBar->addAction(picAct);
 
-
 //    editToolBar->setVisible();
 
 #endif
@@ -295,12 +292,19 @@ void MainWindow::buildWidgetActions()
     editToolBar->addAction(showPreview);
 
     QAction *cloudFileopt = new QAction(tr("Clo&udFile"), this);
-    QKeySequence *cloudShortCut = new QKeySequence(tr("Ctrl+Shift+U"));
+    QKeySequence *cloudShortCut = new QKeySequence(tr("Ctrl+Shift+C"));
     cloudFileopt->setShortcut(*cloudShortCut);
     cloudFileopt->setStatusTip(tr("Operate the cloud files"));
     connect(cloudFileopt, &QAction::triggered, this, &MainWindow::popUpList);
     fileToolBar->addAction(cloudFileopt);
 
+    QAction *uploadAct = new QAction(tr("Upl&oad"), this);
+    QKeySequence *uploadKey = new QKeySequence(tr("Ctrl+Shift+U"));
+    uploadAct->setShortcut(*uploadKey);
+    uploadAct->setStatusTip(tr("Upload this file to the server"));
+    connect(uploadAct, &QAction::triggered, this, &MainWindow::upload);
+    editMenu->addAction(uploadAct);
+    editToolBar->addAction(uploadAct);
 
 #ifndef QT_NO_CLIPBOARD
     cutAct->setEnabled(false);
@@ -308,7 +312,6 @@ void MainWindow::buildWidgetActions()
     connect(editor, &QPlainTextEdit::copyAvailable, cutAct, &QAction::setEnabled);
     connect(editor, &QPlainTextEdit::copyAvailable, copyAct, &QAction::setEnabled);
 #endif
-
 
     //modified signal
     connect(editor->document(), &QTextDocument::contentsChanged,
@@ -423,6 +426,52 @@ void MainWindow::onItalic()
         }
     }
 }
+
+void MainWindow::upload()
+{
+    qDebug() << "uploading...";
+    socket = new QTcpSocket(this);
+
+    QString ip = "127.0.0.1";
+    int port = 8806;
+    socket->connectToHost(ip, port);
+
+    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+
+    if(!socket->waitForConnected(10000)) {
+        QGuiApplication::restoreOverrideCursor();
+        QMessageBox::information(this, "Server", "connecting to server failed.");
+//        this->close();
+        return;
+    }
+//    QGuiApplication::restoreOverrideCursor();
+
+    QString sendData = "Hello world from upload function";
+    int sendRespond = socket->write(sendData.toUtf8());
+    if(sendRespond == -1) {
+        QGuiApplication::restoreOverrideCursor();
+        QMessageBox::information(this, "server", "sending data error");
+        return;
+    }
+
+    connect(socket, SIGNAL(readyRead()), this, SLOT(responseDealer()));
+}
+
+void MainWindow::responseDealer()
+{
+    QGuiApplication::restoreOverrideCursor();
+
+    QByteArray buffer;
+    buffer = socket->readAll();
+    if(buffer.length() > 0) {
+        qDebug() << QString(buffer);
+    } else {
+        QMessageBox::information(this, "server", "receive data error.");
+    }
+    socket->disconnectFromHost();
+
+    timeStamp = 1;// for test
+}
 /*
  * save mainWindow's size settings while closing
  * and read Settings at the beginning
@@ -527,7 +576,7 @@ void MainWindow::loadCloudFile(int stamp, const QString &fileName, const QString
         setCurFileTitle(QString());
         setWindowFilePath(fileName);
         editor->appendPlainText(content);
-        qDebug() << editor -> document() -> isModified();
+//        qDebug() << editor -> document() -> isModified();
     }
 }
 
@@ -659,4 +708,5 @@ void MainWindow::popUpList()
          (availableGeometry.height() - list->height()) / 2);
 
     list->show();
+    list->init();
 }
