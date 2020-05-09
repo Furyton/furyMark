@@ -21,16 +21,8 @@ QDataStream &operator <<(QDataStream & output,generalData  const &obj)
 
     else if(obj.type == 5) {
         output << obj.listLength;
-        queue<int> stampList = obj.fileStampList;
-        for(int i = 0; i < obj.listLength; i++) {
-            output << stampList.front();
-            stampList.pop();
-        }
-        queue<QString> nameList = obj.fileNameList;
-        for(int i = 0; i < obj.listLength; i++) {
-            output << nameList.front();
-            nameList.pop();
-        }
+        output << obj.fileStampList;
+        output << obj.fileNameList;
     } else if(obj.type == 6) {
         output << obj.timeStamp;
         output << obj.fileName;
@@ -39,6 +31,8 @@ QDataStream &operator <<(QDataStream & output,generalData  const &obj)
         output << obj.timeStamp;
         output << obj.fileName;
         output << obj.attachPDF;
+    } else if(obj.type == 8) {
+        output << obj.timeStamp;
     }
 
     return output;
@@ -62,16 +56,8 @@ QDataStream &operator >>(QDataStream & input, generalData &obj)
 
     else if(obj.type == 5) {
         input >> obj.listLength;
-        int stamp = -1;
-        for(int i = 0; i < obj.listLength; i++) {
-            input >> stamp;
-            obj.fileStampList.push(stamp);
-        }
-        QString name;
-        for(int i = 0; i < obj.listLength; i++) {
-            input >> name;
-            obj.fileNameList.push(name);
-        }
+        input >> obj.fileStampList;
+        input >> obj.fileNameList;
     } else if(obj.type == 6) {
         input >> obj.timeStamp;
         input >> obj.fileName;
@@ -80,6 +66,8 @@ QDataStream &operator >>(QDataStream & input, generalData &obj)
         input >> obj.timeStamp;
         input >> obj.fileName;
         input >> obj.attachPDF;
+    } else if(obj.type == 8) {
+        input >> obj.timeStamp;
     }
 
     return input;

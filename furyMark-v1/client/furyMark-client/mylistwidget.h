@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QObject>
 #include <QTcpSocket>
+#include <QList>
+#include <generaldata.h>
 
 namespace Ui {
 class MyListWidget;
@@ -33,9 +35,14 @@ private slots:
 
     void respondDealer();
 
+    void onList(const generalData&);
+    void onOpen(const generalData&);
+    void onPdf(const generalData&);
+//    void onDelete(const generalData&);
 private:
     Ui::MyListWidget *ui;
     QTcpSocket *socket;
+    QList<int> listContent;
 
 signals:
     void openSignal(int, const QString&, const QString&);

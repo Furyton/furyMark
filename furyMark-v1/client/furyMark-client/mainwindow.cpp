@@ -329,15 +329,15 @@ void MainWindow::buildWidgetActions()
        editor->appendPlainText(url);
     });
 
-    connect(editor->verticalScrollBar(), &QScrollBar::valueChanged, [=](int val){
-        qDebug() <<val;
+//    connect(editor->verticalScrollBar(), &QScrollBar::valueChanged, [=](int val){
+//        qDebug() <<val;
 //        preview->page()->scrollPosition().setY(
 //                    (preview->page()->contentsSize().height() - preview->page()->view()->size().height()));
-        preview->scroll(0, preview->page()->contentsSize().height() - preview->page()->view()->size().height());
+//        preview->scroll(0, preview->page()->contentsSize().height() - preview->page()->view()->size().height());
 //        qDebug() << preview->page()->scrollPosition().y() << ", "<<preview->page()->contentsSize().height() - preview->page()->view()->size().height();
 //        preview->page()->view()->size().height();
 //        qDebug() << editor->verticalScrollBar()->size() << ", " << val;
-    });
+//    });
 
 }
 
@@ -429,6 +429,8 @@ void MainWindow::onItalic()
 
 void MainWindow::upload()
 {
+    if(!save()) return;
+
     qDebug() << "uploading...";
     socket = new QTcpSocket(this);
 
@@ -446,13 +448,34 @@ void MainWindow::upload()
     }
 //    QGuiApplication::restoreOverrideCursor();
 
-    QString sendData = "Hello world from upload function";
-    int sendRespond = socket->write(sendData.toUtf8());
+    generalData data;
+
+    data.type = 0;
+    data.timeStamp = timeStamp;
+    data.fileName = getFileName(curFile);
+    data.content = editor->toPlainText();
+
+    qDebug() << data.fileName;
+
+    QByteArray buffer;
+    QDataStream stream(&buffer, QIODevice::ReadWrite);
+    stream << data;
+
+    int sendRespond = socket->write(buffer);
+
     if(sendRespond == -1) {
         QGuiApplication::restoreOverrideCursor();
         QMessageBox::information(this, "server", "sending data error");
         return;
     }
+
+//    QString sendData = "Hello world from upload function";
+//    int sendRespond = socket->write(sendData.toUtf8());
+//    if(sendRespond == -1) {
+//        QGuiApplication::restoreOverrideCursor();
+//        QMessageBox::information(this, "server", "sending data error");
+//        return;
+//    }
 
     connect(socket, SIGNAL(readyRead()), this, SLOT(responseDealer()));
 }
@@ -463,14 +486,21 @@ void MainWindow::responseDealer()
 
     QByteArray buffer;
     buffer = socket->readAll();
+
     if(buffer.length() > 0) {
-        qDebug() << QString(buffer);
+        generalData rec;
+        QDataStream stream(&buffer, QIODevice::ReadWrite);
+        stream >> rec;
+
+        if(rec.type == 8) {
+            timeStamp = rec.timeStamp;
+        } else if(rec.type == 9) {
+            QMessageBox::information(this, "server", "something wrong with server :(");
+        }
     } else {
         QMessageBox::information(this, "server", "receive data error.");
     }
     socket->disconnectFromHost();
-
-    timeStamp = 1;// for test
 }
 /*
  * save mainWindow's size settings while closing

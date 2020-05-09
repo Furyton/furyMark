@@ -4,7 +4,8 @@
 #include <QObject>
 #include <QDataStream>
 #include <QtCore>
-#include <queue>
+//#include <queue>
+#include <QList>
 using namespace std;
 
 class generalData
@@ -20,15 +21,15 @@ public:
     QString fileName;
     QString content;
     int listLength;
-    queue<QString> fileNameList;
-    queue<int> fileStampList;
+    QList<QString> fileNameList;
+    QList<int> fileStampList;
     QByteArray attachPDF;
 
     void initProperty(int type);
     void initProperty(int type, int timeStamp);
     void initProperty(int type, int timeStamp, const QString &fileName, const QString &content);
 
-    void initProperty(int type, int listLenght, const queue<int> &fileStampList, const queue<QString> &fileNameList);
+    void initProperty(int type, int listLenght, const QList<int> &fileStampList, const QList<QString> &fileNameList);
     void initProperty(int type, const QString &fileName, const QByteArray &pdf);
 public:
     friend QDataStream &operator <<(QDataStream &, generalData const &);
