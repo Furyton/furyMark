@@ -276,6 +276,9 @@ generalData sqlLiteHandler::download_pdf(const generalData &info)
     if(ret.type != 9) {
         qDebug() << "getting pdf file...";
         ret.type = 7;
+//        ret.fileName.remove(ret.fileName.length() - 2, 2);
+        ret.fileName.remove(ret.fileName.length() - 2, 2);
+        ret.fileName.append("pdf");
 
         QFile file(QCoreApplication::applicationDirPath() + "/temporary.md");
         file.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -350,8 +353,10 @@ generalData sqlLiteHandler::getList()
         ret.type = 5;
         ret.listLength = 0;
         while(sql_query.next()) {
-            ret.fileNameList.push(sql_query.value(1).toString());
-            ret.fileStampList.push(sql_query.value(0).toInt());
+            ret.fileNameList.append(sql_query.value(1).toString());
+            ret.fileStampList.append(sql_query.value(0).toInt());
+//            ret.fileNameList.push(sql_query.value(1).toString());
+//            ret.fileStampList.push(sql_query.value(0).toInt());
             ret.listLength++;
         }
     }
@@ -377,6 +382,8 @@ generalData sqlLiteHandler::deleteFile(const generalData &info)
             qDebug() << "deleting file" << info.timeStamp;
 
             ret.type = 8;
+            ret.timeStamp = info.timeStamp;
+
             int count, stamp;
             if(getTableInfo(count, stamp))
                 setTableInfo(count - 1, stamp);

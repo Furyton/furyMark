@@ -51,7 +51,6 @@ class sqlHandler
 
         static void init();
    public:
-
         static void getTableInfo(int &, int &);
         static void setTableInfo(int, int);
         static void changeFile(int stamp, const QString&, const QString&);

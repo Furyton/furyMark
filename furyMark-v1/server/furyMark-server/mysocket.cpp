@@ -38,23 +38,50 @@ void MySocket::ServerReadData()
     buffer = socket->readAll();
 
     if(buffer.length() > 0) {
-        QString testString(buffer);
-        qDebug() << testString;
+//        QString testString(buffer);
+//        qDebug() << testString;
 
-        ServerSendData("Hi, I received!");
+//        ServerSendData("Hi, I received!");
+        generalData rec;
+        QDataStream stream(&buffer, QIODevice::ReadWrite);
+        stream >> rec;
+
+        if(rec.type == 0) {
+            ServerSendData(sqlLiteHandler::upload(rec));
+        } else if(rec.type == 1) {
+            ServerSendData(sqlLiteHandler::getList());
+        } else if(rec.type == 2) {
+            ServerSendData(sqlLiteHandler::download_text(rec));
+        } else if(rec.type == 3) {
+            ServerSendData(sqlLiteHandler::download_pdf(rec));
+        } else if(rec.type == 4) {
+            ServerSendData(sqlLiteHandler::deleteFile(rec));
+        } else {
+            qDebug() << "unknown data type ERROR";
+        }
+
     } else {
         qDebug() << "receive data ERROR";
     }
     return;
 }
-void MySocket::ServerSendData(const QString& data)
+void MySocket::ServerSendData(const generalData& data)
 {
-    if(data.isEmpty()) {
+//    if(data.isEmpty()) {
+//        qDebug() << "empty data ERROR";
+//        return;
+//    }
+    QByteArray buffer;
+    QDataStream stream(&buffer, QIODevice::ReadWrite);
+    stream << data;
+
+    if(buffer.isEmpty()) {
         qDebug() << "empty data ERROR";
         return;
     }
+
     if(socket->isValid()) {
-        int sendResponse = socket->write(data.toUtf8());
+        int sendResponse = socket->write(buffer);
         if(sendResponse == -1) {
             qDebug() << "socket writng FAILED";
         } else {

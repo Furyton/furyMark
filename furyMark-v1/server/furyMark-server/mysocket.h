@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <generaldata.h>
+#include <sqllitehandler.h>
 
 class MySocket:public QObject
 {
@@ -17,7 +18,7 @@ private slots:
     void ServerReadData();
     void ServerNewConnection();
     void ServerDisconnection();
-    void ServerSendData(const QString&);
+    void ServerSendData(const generalData&);
 
 private:
     QTcpServer *server;

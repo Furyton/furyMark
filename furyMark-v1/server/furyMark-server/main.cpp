@@ -21,6 +21,8 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+    sqlLiteHandler::init();
+
     MySocket myServer;
     myServer.init();
 
