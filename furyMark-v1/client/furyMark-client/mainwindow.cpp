@@ -16,8 +16,13 @@ MainWindow::MainWindow(QWidget *parent)
     , preview(new QWebEngineView)
 {
 //    ui->setupUi(this);
+    initRecentFileActions();
+    loadRecentFileActions();
+    dragMode = false;
+
     list = new MyListWidget();
     hoster = new PictureHoster();
+    qtimer = new QTimer(this);
 
     readSettings();
 
@@ -175,8 +180,10 @@ void MainWindow::documentModified()
 
 void MainWindow::buildWidgetActions()
 {
+
     //create file operator
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+
     QToolBar *fileToolBar = addToolBar(tr("File"));
     QAction *newAct = new QAction(tr("&New"), this);
     newAct->setShortcuts(QKeySequence::New);
@@ -193,6 +200,15 @@ void MainWindow::buildWidgetActions()
     fileMenu->addAction(openAct);
     fileToolBar->addAction(openAct);
 
+    QMenu *recentFiles = new QMenu(tr("Recent Files"));
+    for (int i = 0; i < MaxRecentFiles; ++i)
+        recentFiles ->addAction(recentFileActs[i]);
+
+    fileMenu->addMenu(recentFiles);
+
+
+    fileMenu->addSeparator();
+
     //save file operator
     QAction *saveAct = new QAction(tr("&Save"), this);
     saveAct->setShortcuts(QKeySequence::Save);
@@ -206,7 +222,6 @@ void MainWindow::buildWidgetActions()
     QAction *saveAsAct = fileMenu->addAction(tr("Save &As..."), this, &MainWindow::saveAs);
     saveAsAct->setShortcuts(QKeySequence::SaveAs);
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
-
 
     fileMenu->addSeparator();
 
@@ -282,29 +297,31 @@ void MainWindow::buildWidgetActions()
 
 #endif
 
+    QMenu *view = menuBar()->addMenu(tr("&View"));
+    QMenu *cloud = menuBar()->addMenu(tr("Cloud"));
+
     //show preview
     QAction *showPreview = new QAction(tr("Pre&view"), this);
     QKeySequence *s = new QKeySequence(tr("Ctrl+P"));
     showPreview->setShortcut(*s);
     showPreview->setStatusTip(tr("Show the preview page"));
     connect(showPreview, &QAction::triggered, this, &MainWindow::switchPreview);
-    editMenu->addAction(showPreview);
-    editToolBar->addAction(showPreview);
+    view->addAction(showPreview);
+//    editToolBar->addAction(showPreview);
 
     QAction *cloudFileopt = new QAction(tr("Clo&udFile"), this);
     QKeySequence *cloudShortCut = new QKeySequence(tr("Ctrl+Shift+C"));
     cloudFileopt->setShortcut(*cloudShortCut);
     cloudFileopt->setStatusTip(tr("Operate the cloud files"));
     connect(cloudFileopt, &QAction::triggered, this, &MainWindow::popUpList);
-    fileToolBar->addAction(cloudFileopt);
+    cloud->addAction(cloudFileopt);
 
     QAction *uploadAct = new QAction(tr("Upl&oad"), this);
     QKeySequence *uploadKey = new QKeySequence(tr("Ctrl+Shift+U"));
     uploadAct->setShortcut(*uploadKey);
     uploadAct->setStatusTip(tr("Upload this file to the server"));
     connect(uploadAct, &QAction::triggered, this, &MainWindow::upload);
-    editMenu->addAction(uploadAct);
-    editToolBar->addAction(uploadAct);
+    cloud->addAction(uploadAct);
 
 #ifndef QT_NO_CLIPBOARD
     cutAct->setEnabled(false);
@@ -312,6 +329,45 @@ void MainWindow::buildWidgetActions()
     connect(editor, &QPlainTextEdit::copyAvailable, cutAct, &QAction::setEnabled);
     connect(editor, &QPlainTextEdit::copyAvailable, copyAct, &QAction::setEnabled);
 #endif
+
+
+
+    QMenu* options = menuBar()->addMenu(tr("settings"));
+    QAction *timer = new QAction(tr("auto save in 10s"), this);
+    timer->setStatusTip(tr("check this option if you want your file be saved every 10s"));
+    timer->setCheckable(true);
+    connect(timer, &QAction::triggered, this, [=](){
+        qDebug() << timer->isChecked();
+        if(timer->isChecked()){
+            qtimer->start(10000);
+        } else {
+            qtimer->stop();
+        }
+    });
+    connect(qtimer, &QTimer::timeout, this, [=](){
+        if(curFile.isEmpty()) return;
+        if(!editor -> document() -> isModified()) return;
+        if(!save()) {
+            qtimer->stop();
+            timer->setChecked(false);
+        }
+     });
+
+    options->addAction(timer);
+
+    QAction *dragSetting = new QAction(tr("set drag"), this);
+    dragSetting->setCheckable(true);
+    dragSetting->setStatusTip(tr("check this option so that when you drag a pic into this window, it will excute pic post mode instead of using the local url"));
+    connect(dragSetting, &QAction::triggered, this, [=](){
+        qDebug() << dragSetting->isChecked();
+        if(dragSetting->isChecked()) {
+            dragMode = true;
+        } else {
+            dragMode = false;
+        }
+    });
+
+    options->addAction(dragSetting);
 
     //modified signal
     connect(editor->document(), &QTextDocument::contentsChanged,
@@ -328,17 +384,6 @@ void MainWindow::buildWidgetActions()
     connect(hoster, &PictureHoster::urlSignal, [=](const QString & url){
        editor->appendPlainText(url);
     });
-
-//    connect(editor->verticalScrollBar(), &QScrollBar::valueChanged, [=](int val){
-//        qDebug() <<val;
-//        preview->page()->scrollPosition().setY(
-//                    (preview->page()->contentsSize().height() - preview->page()->view()->size().height()));
-//        preview->scroll(0, preview->page()->contentsSize().height() - preview->page()->view()->size().height());
-//        qDebug() << preview->page()->scrollPosition().y() << ", "<<preview->page()->contentsSize().height() - preview->page()->view()->size().height();
-//        preview->page()->view()->size().height();
-//        qDebug() << editor->verticalScrollBar()->size() << ", " << val;
-//    });
-
 }
 
 void MainWindow::insertPic()
@@ -621,6 +666,9 @@ bool MainWindow::saveFile(const QString &fileName)
 {
     QString errorMessage;
 
+    qDebug() << fileName;
+    if(QFileInfo(fileName).suffix().toLower() != "md") return false;
+
     QGuiApplication::setOverrideCursor(Qt::WaitCursor);
 
     QSaveFile file(fileName);
@@ -664,6 +712,21 @@ void MainWindow::setCurFileTitle(const QString &fileName) {
     QString shownName = curFile;
     if(curFile.isEmpty()) {
         shownName = "untitled.md";
+    } else {
+        QSettings settings;
+        QStringList files = settings.value("recentFileList").toStringList();
+        files.removeAll(fileName);
+        files.prepend(fileName);
+        while (files.size() > MaxRecentFiles)
+            files.removeLast();
+
+        settings.setValue("recentFileList", files);
+
+        foreach (QWidget *widget, QApplication::topLevelWidgets()) {
+            MainWindow *mainWin = qobject_cast<MainWindow *>(widget);
+            if (mainWin)
+                mainWin->loadRecentFileActions();
+        }
     }
 //    qDebug() << fileName;
 //    qDebug() << shownName;
@@ -719,7 +782,15 @@ void MainWindow::dropEvent(QDropEvent *event) {
         if(format == "jpeg" || format == "png" || format == "jpg") {
 
             imgCount++;
-            editor->appendPlainText("![" + QFileInfo(file_name).fileName() + ":index " + QString("%1").arg(imgCount) + "](file:" + file_name + ")");
+            QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+            if(dragMode){
+
+                this->hoster->sendPost(file_name);
+            } else {
+                QGuiApplication::restoreOverrideCursor();
+                editor->appendPlainText("![" + QFileInfo(file_name).fileName() + ":index " + QString("%1").arg(imgCount) + "](file:" + file_name + ")");
+            }
+//            editor->appendPlainText("![" + QFileInfo(file_name).fileName() + ":index " + QString("%1").arg(imgCount) + "](file:" + file_name + ")");
         } else if(format == "md") {
             if(saveDialog())
                 loadLoacalFile(file_name);
@@ -739,4 +810,35 @@ void MainWindow::popUpList()
 
     list->show();
     list->init();
+}
+void MainWindow::initRecentFileActions()
+{
+    for(int i = 0; i < MaxRecentFiles; i++) {
+        recentFileActs[i] = new QAction(this);
+        recentFileActs[i]->setVisible(false);
+        connect(recentFileActs[i], SIGNAL(triggered()),
+                this, SLOT(openRecentFile()));
+    }
+}
+void MainWindow::loadRecentFileActions()
+{
+    QSettings settings;
+    QStringList files = settings.value("recentFileList").toStringList();
+
+    int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
+
+    for (int i = 0; i < numRecentFiles; ++i) {
+        QString text = files[i];
+        recentFileActs[i]->setText(text);
+        recentFileActs[i]->setData(files[i]);
+        recentFileActs[i]->setVisible(true);
+    }
+    for (int j = numRecentFiles; j < MaxRecentFiles; ++j)
+        recentFileActs[j]->setVisible(false);
+}
+void MainWindow::openRecentFile()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action)
+        loadLoacalFile(action->data().toString());
 }

@@ -20,6 +20,7 @@ private:
 
 public slots:
     void sendPost();
+    void sendPost(const QString& filePath);
     void deal(QNetworkReply*);
 signals:
     void urlSignal(const QString&);

@@ -10,6 +10,9 @@
 #include <mylistwidget.h>
 #include <generaldata.h>
 #include <picturehoster.h>
+#include <QTimer>
+
+#define MaxRecentFiles 7
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -50,6 +53,7 @@ private slots:
     void insertPic();
     void upload();
     void responseDealer();
+    void openRecentFile();
 
 private:
 //    Ui::MainWindow *ui;
@@ -65,6 +69,9 @@ private:
     QString getFileName(const QString &fullFileName);
     void loadCloudFile(int stamp, const QString &fileName, const QString &content);
     void loadPicture();
+    void initRecentFileActions();
+    void loadRecentFileActions();
+
 
     QPlainTextEdit *editor;
 //    QTextBrowser *preview;
@@ -73,10 +80,14 @@ private:
     PictureHoster *hoster;
     QTcpSocket *socket;
 
+    QAction* recentFileActs[MaxRecentFiles];
+
     QWebEngineView *preview;
     QSplitter *splitter;
     QString curFile; //current file name
     document content;
     int timeStamp;
+    bool dragMode;
+    QTimer* qtimer;
 };
 #endif // MAINWINDOW_H
