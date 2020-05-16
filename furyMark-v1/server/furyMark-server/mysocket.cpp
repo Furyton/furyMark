@@ -46,6 +46,8 @@ void MySocket::ServerReadData()
         QDataStream stream(&buffer, QIODevice::ReadWrite);
         stream >> rec;
 
+        qDebug() << "\noperate type: " << rec.type <<endl;
+
         if(rec.type == 0) {
             ServerSendData(sqlLiteHandler::upload(rec));
         } else if(rec.type == 1) {
@@ -58,6 +60,9 @@ void MySocket::ServerReadData()
             ServerSendData(sqlLiteHandler::deleteFile(rec));
         } else {
             qDebug() << "unknown data type ERROR";
+            generalData ret;
+            ret.type = 9;
+            ServerSendData(ret);
         }
 
     } else {
