@@ -40,7 +40,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     QWebChannel *channel = new QWebChannel(this);
     channel->registerObject(QStringLiteral("content"), &content);
+    channel->registerObject(QStringLiteral("main"), this);
     page->setWebChannel(channel);
+
+    QFile file(":/3rdparty/markdown.css");
+    file.open(QIODevice::ReadOnly | QFile::Text);
+    QTextStream in(&file);
+//    qDebug() << in.readAll();
+    css = in.readAll();
 
     preview->setUrl(QUrl("qrc:/index.html"));
 
@@ -293,6 +300,35 @@ void MainWindow::buildWidgetActions()
     editMenu->addAction(picAct);
     editToolBar->addAction(picAct);
 
+    QAction *insert = new QAction(tr("Fomula"), this);
+    QKeySequence *insertShortCut = new QKeySequence(tr("Ctrl+Shift+F"));
+    insert->setShortcut(*insertShortCut);
+    insert->setStatusTip(tr("using ZhiHu platform to get the pic of your fomula, and add it into your file"));
+    connect(insert, &QAction::triggered, this, &MainWindow::onInsert);
+    editMenu->addAction(insert);
+    editToolBar->addAction(insert);
+
+    QAction *html = new QAction(tr("html"), this);
+    connect(html, &QAction::triggered, this, [=](){
+        QFileDialog dialog(this, tr("Save Html File"));
+        dialog.setNameFilter("*.html");
+        dialog.setWindowModality(Qt::WindowModal);
+        dialog.setAcceptMode(QFileDialog::AcceptSave);
+        if(dialog.exec() != QDialog::Accepted) {
+            return;
+        }
+        saveFile(dialog.selectedFiles().first());
+        QSaveFile file(dialog.selectedFiles().first());
+        if(file.open(QFile::WriteOnly | QFile::Text)) {
+            QTextStream out(&file);
+            QString HTML = "<!doctype html><html><meta charset=\"utf-8\"><head><title>" + curFile + "</title><style>" +css+ "</style></head>\
+                    <body>" + myHtml + "</body></html>";
+            out << HTML;
+            file.commit();
+        }
+    });
+    editToolBar->addAction(html);
+
 //    editToolBar->setVisible();
 
 #endif
@@ -385,7 +421,14 @@ void MainWindow::buildWidgetActions()
        editor->appendPlainText(url);
     });
 }
-
+void MainWindow::onInsert()
+{
+    bool ok;
+    QString fomula = QInputDialog::getText(this, "Typing Fomula", "fomula", QLineEdit::Normal, QString("Type here"), &ok);
+//    QUrl url("https://www.zhihu.com/equation?tex=" + fomula);
+    if(ok)
+        editor->appendPlainText("![fomula](https://www.zhihu.com/equation?tex=" + QUrl::toPercentEncoding(fomula) + ") ");
+}
 void MainWindow::insertPic()
 {
     const QMessageBox::StandardButton ret
@@ -500,7 +543,7 @@ void MainWindow::upload()
     data.fileName = getFileName(curFile);
     data.content = editor->toPlainText();
 
-    qDebug() << data.fileName;
+    qDebug() << data.fileName <<' ' <<data.timeStamp;
 
     QByteArray buffer;
     QDataStream stream(&buffer, QIODevice::ReadWrite);
@@ -539,6 +582,7 @@ void MainWindow::responseDealer()
 
         if(rec.type == 8) {
             timeStamp = rec.timeStamp;
+            statusBar() -> showMessage(QString("Uploaded, get file id:%1").arg(timeStamp), 2000);
         } else if(rec.type == 9) {
             QMessageBox::information(this, "server", "something wrong with server :(");
         }

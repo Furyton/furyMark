@@ -43,7 +43,8 @@ private:
     Ui::MyListWidget *ui;
     QTcpSocket *socket;
     QList<int> listContent;
-
+public:
+    bool locked;
 signals:
     void openSignal(int, const QString&, const QString&);
 };

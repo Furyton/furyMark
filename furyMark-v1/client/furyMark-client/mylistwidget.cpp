@@ -4,7 +4,7 @@
 #include <QtWidgets>
 #include <QListWidget>
 #include <QPushButton>
-
+#include <mainwindow.h>
 #include <generaldata.h>
 
 MyListWidget::MyListWidget(QWidget *parent) :
@@ -13,6 +13,7 @@ MyListWidget::MyListWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     setWindowTitle(tr("Operate your cloud files"));
+    locked = false;
 }
 
 MyListWidget::~MyListWidget()
@@ -22,6 +23,8 @@ MyListWidget::~MyListWidget()
 
 void MyListWidget::init()
 {
+    locked = true;
+
     qDebug() << "initialising.";
     socket = new QTcpSocket(this);
 
@@ -35,9 +38,14 @@ void MyListWidget::init()
         QGuiApplication::restoreOverrideCursor();
         QMessageBox::information(this, "Server", "connecting to server failed.");
         this->close();
+
+        locked = true;
+
         return;
     }
     QGuiApplication::restoreOverrideCursor();
+
+    locked = false;
 
     getListRequest();
 
@@ -51,6 +59,7 @@ void MyListWidget::respondDealer()
     QByteArray buffer;
     buffer = socket->readAll();
 
+    locked = false;
 
     if(buffer.length() > 0) {
         generalData rec;
@@ -77,6 +86,12 @@ void MyListWidget::respondDealer()
 }
 void MyListWidget::getListRequest()
 {
+    if(locked) {
+        QMessageBox::warning(this, "Operation", "We can't operate two options at the same time.\n Please wait a sec.");
+        return;
+    }
+    locked = true;
+
     QGuiApplication::setOverrideCursor(Qt::WaitCursor);
 
     generalData data;
@@ -102,14 +117,19 @@ void MyListWidget::onList(const generalData& data)
     qDebug() << data.listLength;
     qDebug() << data.fileStampList;
 
-    for(int i = 0; i < data.listLength; i++) {
-        ui->listWidget->addItems(data.fileNameList);
-        listContent = data.fileStampList;
-//        listContent[0];
-    }
+    ui->listWidget->addItems(data.fileNameList);
+    listContent = data.fileStampList;
+
 }
 void MyListWidget::on_deleteButton_clicked()
 {
+    if(locked) {
+        QMessageBox::warning(this, "Operation", "We can't operate two options at the same time.\n Please wait a sec.");
+        return;
+    }
+    locked = true;
+
+
     if(ui->listWidget->currentRow() == -1) {
         QMessageBox::information(this, "Operation Error", "You haven't select any file");
         return;
@@ -123,6 +143,13 @@ void MyListWidget::on_deleteButton_clicked()
     data.timeStamp = listContent[ui->listWidget->currentRow()];
     ui->listWidget->setItemHidden(ui->listWidget->item(ui->listWidget->currentRow()), true);
 
+    foreach (QWidget *widget, QApplication::topLevelWidgets()) {
+        MainWindow *mainWin = qobject_cast<MainWindow *>(widget);
+        if (mainWin)
+            if(mainWin->timeStamp == data.timeStamp) {
+                mainWin->timeStamp = -1;
+            }
+    }
 //    ui->listWidget->items
 
     QByteArray buffer;
@@ -143,6 +170,12 @@ void MyListWidget::on_deleteButton_clicked()
 
 void MyListWidget::on_openButton_clicked()
 {
+    if(locked) {
+        QMessageBox::warning(this, "Operation", "We can't operate two options at the same time.\n Please wait a sec.");
+        return;
+    }
+    locked = true;
+
     if(ui->listWidget->currentRow() == -1) {
         QMessageBox::information(this, "Operation Error", "You haven't select any file");
         return;
@@ -177,6 +210,12 @@ void MyListWidget::onOpen(const generalData& data){
 
 void MyListWidget::on_pdfButton_clicked()
 {
+    if(locked) {
+        QMessageBox::warning(this, "Operation", "We can't operate two options at the same time.\n Please wait a sec.");
+        return;
+    }
+    locked = true;
+
     if(ui->listWidget->currentRow() == -1) {
         QMessageBox::information(this, "Operation Error", "You haven't select any file");
         return;

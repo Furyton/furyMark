@@ -4,6 +4,7 @@
 <head>
   <script src="qrc:/qtwebchannel/qwebchannel.js"></script>
   <script src="3rdparty/Parser.js"></script>
+  <script src="3rdparty/marked.js"></script>
    <link rel="stylesheet" type="text/css" href="3rdparty/markdown.css">
 <!--   <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>-->
 </head>
@@ -13,17 +14,25 @@
   'use strict';
 
   var placeholder = document.getElementById('placeholder');
-  var parser = new HyperDown;
+  //var parser = new HyperDown;
+  var c;
 
+  var updateHtml = function(text)
+  {
+    c.setMyHtml(marked(text));
+  }
   var updateText = function(text) {
-      placeholder.innerHTML =  parser.makeHtml(text);
+      //placeholder.innerHTML =  parser.makeHtml(text);
+      placeholder.innerHTML =  marked(text);
   }
 
   new QWebChannel(qt.webChannelTransport,
     function(channel) {
       var content = channel.objects.content;
+      c = channel.objects.main;
       updateText(content.text);
       content.textChanged.connect(updateText);
+      content.textChanged.connect(updateHtml);
     }
   );
   </script>

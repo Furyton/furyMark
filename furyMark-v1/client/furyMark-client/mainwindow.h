@@ -36,7 +36,11 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *) override;
     void dropEvent(QDropEvent *) override;
-
+public slots:
+    void setMyHtml(QString text) {
+        myHtml = text;
+//        qDebug() << myHtml;
+    }
 private slots:
     void createFile();
     void open();
@@ -54,6 +58,7 @@ private slots:
     void upload();
     void responseDealer();
     void openRecentFile();
+    void onInsert();
 
 private:
 //    Ui::MainWindow *ui;
@@ -86,8 +91,12 @@ private:
     QSplitter *splitter;
     QString curFile; //current file name
     document content;
-    int timeStamp;
+
     bool dragMode;
     QTimer* qtimer;
+public:
+    int timeStamp;
+    QString myHtml;
+    QString css;
 };
 #endif // MAINWINDOW_H
