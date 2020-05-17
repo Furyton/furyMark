@@ -257,7 +257,7 @@ generalData sqlLiteHandler::upload(const generalData &info)
             if(addFile(stamp, info.fileName, info.content)) {
 //                qDebug() << QString("added a new file named %1").arg(info.fileName);
                 ret.type = 8;
-                ret.type = stamp;
+                ret.timeStamp = stamp;
             } else {
                 ret.type = 9;
             }
@@ -265,7 +265,7 @@ generalData sqlLiteHandler::upload(const generalData &info)
             ret.type = 9;
         }
     }
-
+//    qDebug() << "uploaded file's id is " << ret.
     return ret;
 }
 generalData sqlLiteHandler::download_pdf(const generalData &info)
