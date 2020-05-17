@@ -321,7 +321,7 @@ void MainWindow::buildWidgetActions()
         QSaveFile file(dialog.selectedFiles().first());
         if(file.open(QFile::WriteOnly | QFile::Text)) {
             QTextStream out(&file);
-            QString HTML = "<!doctype html><html><meta charset=\"utf-8\"><head><title>" + curFile + "</title><style>" +css+ "</style></head>\
+            QString HTML = "<!doctype html><html><meta charset=\"utf-8\"><head><title>" + curFile + "</title></head>\
                     <body>" + myHtml + "</body></html>";
             out << HTML;
             file.commit();
@@ -455,7 +455,7 @@ void MainWindow::loadPicture()
 {
     QString strFilePath = QFileDialog::getOpenFileName(nullptr, QString::fromLocal8Bit("Select a picture"), "./",
                                                        tr("Image files(*.bmp *.jpg *.pbm *.pgm *.png *.ppm *.xbm *.xpm *.jpeg);;All files (*.*)"));
-    editor->appendPlainText("![" + getFileName(strFilePath) + "](" + strFilePath + ")");
+    editor->appendPlainText("![" + getFileName(strFilePath) + "](file:" + strFilePath + ")");
 }
 
 /*
@@ -582,6 +582,7 @@ void MainWindow::responseDealer()
 
         if(rec.type == 8) {
             timeStamp = rec.timeStamp;
+            qDebug() << "received id " << timeStamp;
             statusBar() -> showMessage(QString("Uploaded, get file id:%1").arg(timeStamp), 2000);
         } else if(rec.type == 9) {
             QMessageBox::information(this, "server", "something wrong with server :(");
@@ -883,6 +884,8 @@ void MainWindow::loadRecentFileActions()
 void MainWindow::openRecentFile()
 {
     QAction *action = qobject_cast<QAction *>(sender());
-    if (action)
-        loadLoacalFile(action->data().toString());
+    if (action){
+        if(saveDialog())
+            loadLoacalFile(action->data().toString());
+    }
 }
